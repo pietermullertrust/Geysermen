@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Background Image -->
+    <ImageView
+        android:id="@+id/imgDashboard"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:src="@drawable/dashboard_bg"
+        android:scaleType="fitXY"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- PV -->
+    <TextView
+        android:id="@+id/txtPV"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="PV: -- W"
+        android:textColor="#3F51B5"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="24dp"
+        android:layout_marginStart="32dp" />
+
+    <!-- Grid -->
+    <TextView
+        android:id="@+id/txtGrid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Grid: -- W"
+        android:textColor="#3F51B5"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="32dp" />
+
+    <!-- SOC -->
+    <TextView
+        android:id="@+id/txtSOC"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SOC: --%"
+        android:textColor="#3F51B5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/txtPV"
+        android:layout_marginTop="32dp"
+        android:layout_marginStart="32dp" />
+
+    <!-- Temp1 -->
+    <TextView
+        android:id="@+id/txtTemp1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Temp1: -- °C"
+        android:textColor="#3F51B5"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/txtGrid"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="32dp" />
+
+    <!-- Temp2 -->
+    <TextView
+        android:id="@+id/txtTemp2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Temp2: -- °C"
+        android:textColor="#3F51B5"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/txtTemp1"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="32dp" />
+
+    <!-- UPS -->
+    <TextView
+        android:id="@+id/txtUPS"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="UPS: -- W"
+        android:textColor="#3F51B5"
+        app:layout_constraintTop_toBottomOf="@id/txtSOC"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="48dp"
+        android:layout_marginStart="32dp" />
+
+    <!-- Load -->
+    <TextView
+        android:id="@+id/txtLoad"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Load: -- W"
+        android:textColor="#3F51B5"
+        app:layout_constraintTop_toBottomOf="@id/txtUPS"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="24dp"
+        android:layout_marginStart="32dp" />
+
+    <!-- Switch Geyser 1 -->
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switchGeyser1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Geyser 1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/txtTemp2"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="32dp" />
+
+    <!-- Switch Geyser 2 -->
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switchGeyser2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Geyser 2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/switchGeyser1"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="32dp" />
+
+    <!-- Debug view -->
+    <TextView
+        android:id="@+id/txtDebug"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textColor="#FF0000"
+        android:textSize="12sp"
+        android:gravity="start"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
