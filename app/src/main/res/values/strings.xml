@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">GeyserMen</string>
+    <string name="battery_soc">BATTERY SOC: --%</string>
+    <string name="grid_w">Grid: -- W</string>
+</resources>
