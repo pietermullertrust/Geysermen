@@ -17,8 +17,8 @@ import java.net.Socket
 import android.content.Intent
 import android.view.MotionEvent
 import android.view.View
-import java.lang.reflect.TypeVariable
-import com.example.geysermen.NewPageActivity
+//import java.lang.reflect.TypeVariable
+//import com.example.geysermen.NewPageActivity
 
 class MainActivity : AppCompatActivity() {
 
