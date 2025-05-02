@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var switchGeyser1: SwitchCompat
     private lateinit var switchGeyser2: SwitchCompat
+    var userChangingSwitch = true
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -97,13 +98,19 @@ class MainActivity : AppCompatActivity() {
             switchGeyser2 = findViewById(R.id.switchGeyser2)
 
             switchGeyser1.setOnCheckedChangeListener { _, isChecked ->
-                val command = if (isChecked) "ON1" else "OFF1"
-                sendCommand(masterIP, command)
+                if (userChangingSwitch) {
+                    val command = if (isChecked) "ON1" else "OFF1"
+                    sendCommand(masterIP, command)
+                    sendCommand(masterIP, "STATUS")  // <-- ask for fresh status
+                }
             }
 
             switchGeyser2.setOnCheckedChangeListener { _, isChecked ->
-                val command = if (isChecked) "ON2" else "OFF2"
-                sendCommand(masterIP, command)
+                if (userChangingSwitch) {
+                    val command = if (isChecked) "ON2" else "OFF2"
+                    sendCommand(masterIP, command)
+                    sendCommand(masterIP, "STATUS")  // <-- ask for fresh status
+                }
             }
 
             startPolling()
@@ -170,6 +177,7 @@ class MainActivity : AppCompatActivity() {
             val len = input.read(buffer)
             val response = String(buffer, 0, len)
 
+
             runOnUiThread {
                 txtDebug.text = "📥 STATUS: $response"
             }
@@ -188,6 +196,8 @@ class MainActivity : AppCompatActivity() {
                 txtLoad.text = " Load:${map["Load"]} W"
                 txtTemp1.text = "1: ${map["TEMP1"]}°C"
                 txtTemp2.text = "2: ${map["TEMP2"]}°C"
+                //switchGeyser1.text = ": ${map["GEYSER1"]}"
+                //switchGeyser2.text = ": ${map["GEYSER2"]}"
 
                 // Update the ProgressBar with the SOC value
                 //val socValue = map["SOC"]?.trim()?.toIntOrNull() ?: 0
@@ -198,8 +208,13 @@ class MainActivity : AppCompatActivity() {
                 Log.d("SOC Value", "Received SOC value: ${map["SOC"]}")
                 Log.d("SOC Value", "Received value: ${map["SOC"]}, type: ${map["SOC"]?.javaClass}")
 
-                progressBar.progress = socValue.coerceIn(0, 100)  // Ensure the value is within 0 to 100
+                progressBar.progress = socValue.coerceIn(0, len)  // Ensure the value is within 0 to 100
                 updateProgressBar(socValue)
+
+                updateSwitchStates(response)
+
+
+
             }
 
             socket.close()
@@ -232,4 +247,18 @@ class MainActivity : AppCompatActivity() {
             }
         }.start()
     }
+
+    fun updateSwitchStates(status: String) {
+        val cleanStatus = status.replace(" ", "")
+        val geyser1On = cleanStatus.contains("GEYSER1=ON", ignoreCase = true)
+        val geyser2On = cleanStatus.contains("GEYSER2=ON", ignoreCase = true)
+
+        userChangingSwitch = false  // block triggering listeners
+
+        switchGeyser1.isChecked = geyser1On  // ✅ moves the slider bar
+        switchGeyser2.isChecked = geyser2On
+
+        userChangingSwitch = true   // re-enable listeners
+    }
+
 }
