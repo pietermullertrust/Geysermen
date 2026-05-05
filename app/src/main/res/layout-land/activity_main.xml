@@ -9,12 +9,12 @@
         android:id="@+id/imgDashboard"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:src="@drawable/dashboard_bg"
         android:scaleType="fitXY"
-        app:layout_constraintTop_toTopOf="parent"
+        android:src="@drawable/dashboard_bg"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- PV -->
     <TextView
@@ -89,18 +89,19 @@
         android:layout_marginStart="32dp" />
 
     <!-- Load -->
+
+    <!-- Switch Geyser 1 -->
     <TextView
         android:id="@+id/txtLoad"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="44dp"
+        android:layout_marginTop="128dp"
         android:text="Load: -- W"
         android:textColor="#3F51B5"
-        app:layout_constraintTop_toBottomOf="@id/txtUPS"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="24dp"
-        android:layout_marginStart="32dp" />
+        app:layout_constraintTop_toBottomOf="@id/txtUPS" />
 
-    <!-- Switch Geyser 1 -->
     <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/switchGeyser1"
         android:layout_width="wrap_content"
