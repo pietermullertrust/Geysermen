@@ -25,9 +25,14 @@ object DeviceStorage {
                     name = o.optString("name"),
                     type = o.optString("type"),
                     role = o.optString("role"),
+                    priority = o.optInt("priority", 0),
+                    relationship = o.optString("relationship", ""),
                     ip = o.optString("ip"),
                     deviceId = o.optString("deviceId"),
-                    localKey = o.optString("localKey")
+                    localKey = o.optString("localKey"),
+                    online = o.optBoolean("online", false),
+                    firmware = o.optString("firmware", ""),
+                    lastSeen = o.optLong("lastSeen", 0)
                 )
             )
         }
@@ -44,9 +49,14 @@ object DeviceStorage {
             o.put("name", d.name)
             o.put("type", d.type)
             o.put("role", d.role)
+            o.put("priority", d.priority)
+            o.put("relationship", d.relationship)
             o.put("ip", d.ip)
             o.put("deviceId", d.deviceId)
             o.put("localKey", d.localKey)
+            o.put("online", d.online)
+            o.put("firmware", d.firmware)
+            o.put("lastSeen", d.lastSeen)
             arr.put(o)
         }
 
@@ -65,5 +75,18 @@ object DeviceStorage {
         val devices = load(context)
         devices.add(device)
         save(context, devices)
+    }
+
+    fun update(context: Context, device: Device) {
+        val devices = load(context)
+
+        val index = devices.indexOfFirst {
+            it.slot == device.slot
+        }
+
+        if (index >= 0) {
+            devices[index] = device
+            save(context, devices)
+        }
     }
 }

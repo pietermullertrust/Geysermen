@@ -174,7 +174,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:layout_marginEnd="112dp"
+        android:layout_marginEnd="76dp"
         android:text=" -- W"
         android:textColor="#3F51B5"
         android:textSize="24sp"

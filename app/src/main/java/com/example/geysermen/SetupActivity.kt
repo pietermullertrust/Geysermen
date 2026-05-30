@@ -33,11 +33,14 @@ class SetupActivity : AppCompatActivity() {
         }
 
         listDevices.setOnItemClickListener { _, _, position, _ ->
-            Toast.makeText(
-                this,
-                "Open device slot ${position + 1}",
-                Toast.LENGTH_SHORT
-            ).show()
+
+            val devices = DeviceStorage.load(this)
+
+            if (position < devices.size) {
+                val intent = Intent(this, DeviceSetupActivity::class.java)
+                intent.putExtra("slot", devices[position].slot)
+                startActivity(intent)
+            }
         }
     }
 
@@ -50,7 +53,7 @@ class SetupActivity : AppCompatActivity() {
         for (d in devices) {
 
             list.add(
-                "Slot ${d.slot} - ${d.name} | ${d.type} | ${d.role}"
+                "${d.name}\n${d.type} • ${d.relationship} • Priority ${d.priority}"
             )
         }
 

@@ -56,6 +56,10 @@
             android:name=".AddDeviceActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".DeviceSetupActivity"
+            android:exported="false" />
+
         <service
             android:name=".WatchdogService"
             android:enabled="true"
