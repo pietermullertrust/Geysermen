@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add Device"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/editDeviceName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Device Name" />
+
+        <Spinner
+            android:id="@+id/spinnerDeviceType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <Spinner
+            android:id="@+id/spinnerDeviceRole"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/btnImportTuya"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Import Tuya Device" />
+
+        <Button
+            android:id="@+id/btnSaveDevice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save Device" />
+
+    </LinearLayout>
+
+</ScrollView>

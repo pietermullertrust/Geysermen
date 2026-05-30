@@ -52,6 +52,10 @@
             android:name=".NewPageActivityInverter"
             android:exported="false"/>
 
+        <activity
+            android:name=".AddDeviceActivity"
+            android:exported="false" />
+
         <service
             android:name=".WatchdogService"
             android:enabled="true"

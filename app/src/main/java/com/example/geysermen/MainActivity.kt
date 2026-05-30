@@ -499,11 +499,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        switchGeyser2.setOnCheckedChangeListener { _, isChecked ->
-            if (userChangingSwitch) {
-                sendCommand(if (isChecked) "ON2" else "OFF2")
-                sendCommand("STATUS")
-            }
+        switchGeyser2.setOnClickListener {
+            val cmd = if (switchGeyser2.isChecked) "TUYA_ON" else "TUYA_OFF"
+
+            Log.d("TUYA_SWITCH", "Sending: $cmd")
+            sendCommand(cmd)
         }
     }
 
@@ -738,19 +738,26 @@ class MainActivity : AppCompatActivity() {
     private fun sendCommand(command: String) {
         Thread {
             try {
+                val cmd = if (command.endsWith("\n")) command else "$command\n"
+
+                Log.d("TCP_SEND", "Sending command: $cmd to $masterIP:$port")
+
                 val socket = Socket()
                 socket.connect(InetSocketAddress(masterIP, port), 2000)
-                Thread.sleep(100)
 
                 val os: OutputStream = socket.getOutputStream()
-                os.write(command.toByteArray())
+                os.write(cmd.toByteArray())
                 os.flush()
+
                 socket.close()
 
                 runOnUiThread {
-                    txtDebug.text = "📤 Sent: $command → $masterIP"
+                    txtDebug.text = "📤 Sent: ${cmd.trim()} → $masterIP"
                 }
+
             } catch (e: Exception) {
+                Log.e("TCP_SEND", "Send error", e)
+
                 runOnUiThread {
                     txtDebug.text = "❌ Send error: ${e.message} (IP=$masterIP)"
                 }
@@ -759,17 +766,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateSwitchStates(status: String) {
+
         val parts = status.trim().uppercase().split('|')
 
-        val geyser1On = parts.size > 1 && parts[1] == "ON1"
-        val geyser2On = parts.size > 2 && parts[2] == "ON2"
+        val geyser1On = parts.contains("ON1")
+        val geyser2On = parts.contains("ON2")
 
         Log.d("SWITCH", "PARTS=$parts")
         Log.d("SWITCH", "GEYSER1=$geyser1On, GEYSER2=$geyser2On")
 
         userChangingSwitch = false
+
         switchGeyser1.isChecked = geyser1On
         switchGeyser2.isChecked = geyser2On
+
         userChangingSwitch = true
     }
 
