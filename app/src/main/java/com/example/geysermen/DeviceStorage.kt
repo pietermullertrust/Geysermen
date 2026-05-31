@@ -67,8 +67,15 @@ object DeviceStorage {
     }
 
     fun nextSlot(context: Context): Int {
-        val devices = load(context)
-        return (devices.maxOfOrNull { it.slot } ?: 0) + 1
+        val usedSlots = load(context).map { it.slot }.toSet()
+
+        for (slot in 1..20) {
+            if (!usedSlots.contains(slot)) {
+                return slot
+            }
+        }
+
+        return (usedSlots.maxOrNull() ?: 0) + 1
     }
 
     fun add(context: Context, device: Device) {
@@ -89,4 +96,15 @@ object DeviceStorage {
             save(context, devices)
         }
     }
+
+    fun delete(context: Context, slot: Int) {
+        val devices = load(context)
+
+        val filtered = devices.filter {
+            it.slot != slot
+        }
+
+        save(context, filtered)
+    }
+
 }

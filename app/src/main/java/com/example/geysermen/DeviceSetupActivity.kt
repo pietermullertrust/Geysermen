@@ -5,6 +5,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import android.content.Intent
 import android.widget.ImageButton
+import android.widget.Button
 
 class DeviceSetupActivity : AppCompatActivity() {
 
@@ -30,6 +31,7 @@ class DeviceSetupActivity : AppCompatActivity() {
         val txtDeviceId = findViewById<TextView>(R.id.txtDeviceId)
 
         val device = DeviceStorage.load(this).find { it.slot == slot }
+        val btnDelete = findViewById<Button>(R.id.btnDeleteDevice)
 
         if (device != null) {
 
@@ -59,8 +61,21 @@ class DeviceSetupActivity : AppCompatActivity() {
                     device.slot
                 )
 
+
+
                 startActivity(intent)
             }
+
+            btnDelete.setOnClickListener {
+
+                DeviceStorage.delete(
+                    this,
+                    device.slot
+                )
+
+                finish()
+            }
+
         } else {
             titleView.text = "Device not found"
         }
