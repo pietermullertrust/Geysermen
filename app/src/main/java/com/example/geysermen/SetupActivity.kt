@@ -67,12 +67,17 @@ class SetupActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        if (::listDevices.isInitialized) {
-            listDevices.adapter = ArrayAdapter(
-                this,
-                android.R.layout.simple_list_item_1,
-                loadDeviceList()
-            )
+        MasterSync.syncFromMaster(this) {
+            runOnUiThread {
+                if (::listDevices.isInitialized) {
+                    listDevices.adapter = ArrayAdapter(
+                        this,
+                        android.R.layout.simple_list_item_1,
+                        loadDeviceList()
+                    )
+                }
+
+            }
         }
     }
 

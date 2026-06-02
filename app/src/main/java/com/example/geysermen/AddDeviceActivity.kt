@@ -81,9 +81,11 @@ class AddDeviceActivity : AppCompatActivity() {
 
             if (editSlot > 0) {
                 DeviceStorage.update(this, device)
+                MasterSync.syncToMaster(this)
                 Toast.makeText(this, "Device updated", Toast.LENGTH_LONG).show()
             } else {
                 DeviceStorage.add(this, device)
+                MasterSync.syncToMaster(this)
                 Toast.makeText(this, "Device added to slot $slot", Toast.LENGTH_LONG).show()
             }
 
