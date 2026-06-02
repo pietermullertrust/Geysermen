@@ -12,7 +12,7 @@ object MasterSync {
 
     private const val TAG = "MASTER_SYNC"
 
-    private const val MASTER_IP = "10.0.0.23"
+    private const val MASTER_IP = "154.66.153.194"
     private const val PORT = 9000
 
     fun syncFromMaster(
