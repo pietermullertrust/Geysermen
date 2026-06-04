@@ -1,8 +1,11 @@
 package com.example.geysermen
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import android.content.Intent
 
 class AddDeviceActivity : AppCompatActivity() {
 
@@ -13,6 +16,11 @@ class AddDeviceActivity : AppCompatActivity() {
     private lateinit var spinnerDeviceRelationship: Spinner
     private lateinit var btnImportTuya: Button
     private lateinit var btnSaveDevice: Button
+
+    private var importedIp = ""
+    private var importedDeviceId = ""
+    private var importedFirmware = ""
+    private var importedLocalKey = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,10 +41,119 @@ class AddDeviceActivity : AppCompatActivity() {
         val priorities = arrayOf("0 - Controller", "1 - Shed First", "2", "3", "4", "5")
         val relationships = arrayOf("Master", "Slave", "Load", "Monitor")
 
-        spinnerDeviceType.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, types)
-        spinnerDeviceRole.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, roles)
-        spinnerDevicePriority.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, priorities)
-        spinnerDeviceRelationship.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, relationships)
+        spinnerDeviceType.adapter =
+            ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, types)
+
+        spinnerDeviceRole.adapter =
+            ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, roles)
+
+        spinnerDevicePriority.adapter =
+            ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, priorities)
+
+        spinnerDeviceRelationship.adapter =
+            ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, relationships)
+
+        btnImportTuya.setOnClickListener {
+
+            if (spinnerDeviceType.selectedItem.toString() != "Tuya") {
+
+                Toast.makeText(
+                    this,
+                    "Select Tuya as device type first",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                return@setOnClickListener
+            }
+
+            Thread {
+
+                try {
+
+                    val devices =
+                        TuyaImporter()
+                            .getDevices()
+
+                    runOnUiThread {
+
+                        if (devices.length()==0) {
+
+                            Toast.makeText(
+                                this,
+                                "No devices",
+                                Toast.LENGTH_LONG
+                            ).show()
+
+                            return@runOnUiThread
+                        }
+
+                        val items =
+                            ArrayList<String>()
+
+                        for (
+                        i
+                        in
+                        0 until devices.length()
+                        ) {
+
+                            val o =
+                                devices.getJSONObject(i)
+
+                            items.add(
+
+                                "${o.optString("name")} | ${o.optString("ip")}"
+
+                            )
+                        }
+
+                        AlertDialog.Builder(this)
+                            .setTitle(
+                                "Select Tuya Device"
+                            )
+                            .setItems(
+                                items.toTypedArray()
+                            ) { _, which ->
+
+                                val selected =
+                                    devices.getJSONObject(
+                                        which
+                                    )
+
+                                importedIp =
+                                    selected.optString("ip")
+
+                                importedDeviceId =
+                                    selected.optString("deviceId")
+
+                                importedLocalKey =
+                                    selected.optString("localKey")
+
+                                importedFirmware =
+                                    selected.optString("version")
+
+                                editDeviceName.setText(
+                                    selected.optString("name")
+                                )
+                            }
+                            .show()
+
+                    }
+
+                } catch (e: Exception) {
+
+                    runOnUiThread {
+
+                        Toast.makeText(
+                            this,
+                            e.message,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+
+                }
+
+            }.start()
+        }
 
         if (editSlot > 0) {
             title = "Edit Device"
@@ -46,11 +163,18 @@ class AddDeviceActivity : AppCompatActivity() {
             if (existing != null) {
                 editDeviceName.setText(existing.name)
 
+                importedIp = existing.ip
+                importedDeviceId = existing.deviceId
+                importedFirmware = existing.firmware
+
                 spinnerDeviceType.setSelection(types.indexOf(existing.type).coerceAtLeast(0))
                 spinnerDeviceRole.setSelection(roles.indexOf(existing.role).coerceAtLeast(0))
                 spinnerDevicePriority.setSelection(existing.priority.coerceIn(0, priorities.size - 1))
-                spinnerDeviceRelationship.setSelection(relationships.indexOf(existing.relationship).coerceAtLeast(0))
+                spinnerDeviceRelationship.setSelection(
+                    relationships.indexOf(existing.relationship).coerceAtLeast(0)
+                )
             }
+
         } else {
             title = "Add Device"
         }
@@ -68,16 +192,23 @@ class AddDeviceActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val slot = if (editSlot > 0) editSlot else DeviceStorage.nextSlot(this)
+            val slot =
+                if (editSlot > 0) editSlot
+                else DeviceStorage.nextSlot(this)
 
-            val device = Device(
-                slot = slot,
-                name = name,
-                type = type,
-                role = role,
-                priority = priority,
-                relationship = relationship
-            )
+            val device =
+                Device(
+                    slot = slot,
+                    name = name,
+                    type = type,
+                    role = role,
+                    priority = priority,
+                    relationship = relationship,
+                    ip = importedIp,
+                    deviceId = importedDeviceId,
+                    localKey = importedLocalKey,
+                    firmware = importedFirmware
+                )
 
             if (editSlot > 0) {
                 DeviceStorage.update(this, device)

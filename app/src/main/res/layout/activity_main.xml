@@ -6,6 +6,13 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
 
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5" />
+
     <!-- Background image -->
 
     <!-- Guidelines for Portrait Layout -->
@@ -212,8 +219,8 @@
         android:id="@+id/txtSOC"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="104dp"
-        android:layout_marginEnd="104dp"
+        android:layout_marginTop="100dp"
+        android:layout_marginEnd="96dp"
         android:text=" --%"
         android:textColor="#3F51B5"
         android:textSize="24sp"
@@ -273,7 +280,7 @@
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@+id/guideline_end_10"
         app:layout_constraintHorizontal_bias="0.335"
-        app:layout_constraintStart_toStartOf="@+id/guideline_center"
+        app:layout_constraintStart_toStartOf="@id/guideline_center"
         app:layout_constraintTop_toTopOf="@+id/guideline_top_50" />
 
     <androidx.appcompat.widget.SwitchCompat

@@ -3,6 +3,13 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+configurations.all {
+    exclude group: "com.thingclips.smart", module: 'thingsmart-modularCampAnno'
+    // You may also want these common ones:
+    // exclude group: "com.thingclips.smart", module: "thingplugin-annotation"
+    // exclude group: "com.thingclips.android.module", module: "thingmodule-annotation"
+}
+
 android {
     namespace 'com.example.geysermen'
     compileSdk 35
@@ -35,6 +42,12 @@ android {
 }
 
 dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.aar'])
+
+    implementation 'com.alibaba:fastjson:1.1.67.android'
+    implementation 'com.squareup.okhttp3:okhttp-urlconnection:3.14.9'
+    implementation 'com.thingclips.smart:thingsmart:7.5.1'
+
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.10.0'

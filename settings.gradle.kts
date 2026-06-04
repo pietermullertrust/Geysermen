@@ -11,15 +11,18 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
-        maven(url = "https://jitpack.io") // ✅ Kotlin DSL syntax
+        maven(url = "https://jitpack.io")
+        maven(url = "https://maven-other.tuya.com/repository/maven-releases/")
+        maven(url = "https://maven-other.tuya.com/repository/maven-snapshots/")
+        maven(url = "https://maven-other.tuya.com/repository/maven-commercial-releases/")
     }
 }
 
 rootProject.name = "GeyserMen"
 include(":app")
- 
