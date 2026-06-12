@@ -72,7 +72,7 @@ class DeviceSetupActivity : AppCompatActivity() {
                     this,
                     device.slot
                 )
-                MasterSync.syncToMaster(this)
+                //MasterSync.syncToMaster(this)
 
                 finish()
             }

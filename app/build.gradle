@@ -4,31 +4,46 @@ plugins {
 }
 
 configurations.all {
-    exclude group: "com.thingclips.smart", module: 'thingsmart-modularCampAnno'
-    // You may also want these common ones:
-    // exclude group: "com.thingclips.smart", module: "thingplugin-annotation"
-    // exclude group: "com.thingclips.android.module", module: "thingmodule-annotation"
+    exclude group: "com.thingclips.smart",
+            module: "thingsmart-modularCampAnno"
 }
 
 android {
+
     namespace 'com.example.geysermen'
+
     compileSdk 35
 
     defaultConfig {
         applicationId "com.example.geysermen"
+
         minSdk 24
         targetSdk 35
+
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+    buildFeatures {
+        prefab true
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
         }
+
+        resources {
+            excludes += [
+                    "META-INF/**"
+            ]
+        }
+    }
+
+    packagingOptions {
+        pickFirst "**/libc++_shared.so"
+        pickFirst "**/*.so"
     }
 
     compileOptions {
@@ -37,25 +52,36 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = '11'
+        jvmTarget = "11"
     }
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.aar'])
+
+    implementation fileTree(
+            dir: "libs",
+            include: ["*.aar"]
+    )
 
     implementation 'com.alibaba:fastjson:1.1.67.android'
+
     implementation 'com.squareup.okhttp3:okhttp-urlconnection:3.14.9'
+
     implementation 'com.thingclips.smart:thingsmart:7.5.1'
 
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
+
     implementation 'com.google.android.material:material:1.10.0'
+
     implementation 'androidx.activity:activity-ktx:1.7.2'
+
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    implementation 'com.thingclips.smart:thingsmart:6.7.0'
+
+    // ADD THIS
+    //implementation 'com.android.ndk.thirdparty:libc++:1.0.0'
 }

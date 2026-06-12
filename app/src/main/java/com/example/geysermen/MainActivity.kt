@@ -41,6 +41,7 @@ import android.app.NotificationManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.thingclips.smart.home.sdk.ThingHomeSdk
 
 class MainActivity : AppCompatActivity() {
 
@@ -268,6 +269,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
+
+        //val loggedIn = ThingHomeSdk.getUserInstance().isLogin()
+        //Log.i("TUYA", "Logged in = $loggedIn")
+
+        //val user = ThingHomeSdk.getUserInstance().user
+        //Log.i("TUYA", "UID=${user?.uid}")
+        //Log.i("TUYA", "EMAIL=${user?.username}")
+
+
 
         createNotificationChannel()
         requestNotificationPermissionIfNeeded()

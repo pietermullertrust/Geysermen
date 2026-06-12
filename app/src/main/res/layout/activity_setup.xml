@@ -18,20 +18,25 @@
             android:textStyle="bold"
             android:paddingBottom="12dp" />
 
-        <ListView
-            android:id="@+id/listDevices"
+        <Button
+            android:id="@+id/btnDiscover"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="wrap_content"
+            android:text="DISCOVER DEVICES"
+            android:layout_marginBottom="12dp"/>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:id="@+id/deviceContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"/>
+
+        </ScrollView>
 
     </LinearLayout>
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/btnAddDevice"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|end"
-        android:layout_margin="16dp"
-        android:contentDescription="Add Device"
-        app:srcCompat="@android:drawable/ic_input_add" />
 
 </FrameLayout>
