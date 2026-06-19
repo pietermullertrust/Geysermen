@@ -16,6 +16,7 @@ import java.net.DatagramSocket
 import java.net.InetAddress
 import java.net.Socket
 
+
 class SetupActivity : AppCompatActivity() {
 
     private lateinit var btnDiscover: Button
@@ -25,6 +26,7 @@ class SetupActivity : AppCompatActivity() {
         val type: String,
         val controller: String,
         val functionName: String,
+        val assignedSwitch: String = "",
         val ip: String,
         val port: Int,
         val fw: String,
@@ -323,6 +325,11 @@ class SetupActivity : AppCompatActivity() {
                     ).trim()
 
                     val ip = responsePacket.address.hostAddress ?: ""
+
+                    android.util.Log.i(
+                        "UDP_DISC_RX",
+                        "ip=$ip reply=$reply"
+                    )
 
                     if (reply.startsWith("GEYSERMAN_DEVICE") && !seenIps.contains(ip)) {
                         seenIps.add(ip)
@@ -873,6 +880,31 @@ class SetupActivity : AppCompatActivity() {
 
         box.addView(functionName)
 
+        val switchList = arrayOf(
+            "Unassigned",
+            "Main Controller",
+            "Geyser 1",
+            "Geyser 2",
+            "Pool Pump",
+            "Load 1",
+            "Load 2",
+            "Load 3",
+            "Spare"
+        )
+
+        val switchSpinner = Spinner(this)
+
+        switchSpinner.id = 7000 + index
+
+        switchSpinner.adapter =
+            ArrayAdapter(
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                switchList
+            )
+
+        box.addView(switchSpinner)
+
         val check = CheckBox(this)
         check.id = 9000 + index
         check.isChecked = false
@@ -889,6 +921,27 @@ class SetupActivity : AppCompatActivity() {
         row.addView(check)
 
         deviceContainer.addView(row)
+    }
+
+    private fun findExistingAssignment(d: DiscoveredDevice): String {
+        for (old in savedDevices) {
+            if (
+                d.deviceId.isNotEmpty() &&
+                old.deviceId == d.deviceId
+            ) {
+                return old.assignedSwitch
+            }
+
+            if (
+                d.deviceId.isEmpty() &&
+                old.ip == d.ip &&
+                old.type == d.type
+            ) {
+                return old.assignedSwitch
+            }
+        }
+
+        return ""
     }
 
     private fun saveNewDevices() {
@@ -910,6 +963,9 @@ class SetupActivity : AppCompatActivity() {
             val functionText = findViewById<EditText>(5000 + index)
             val functionName = functionText.text.toString().trim()
 
+            val switchSpinner = findViewById<Spinner>(7000 + index)
+            val assignedSwitch = switchSpinner.selectedItem.toString()
+
             if (functionName.isEmpty()) {
                 showText("Enter function name for ${d.ip}")
                 return
@@ -917,6 +973,14 @@ class SetupActivity : AppCompatActivity() {
 
             val controller =
                 if (d.type.equals("ESP32", true)) "master" else "slave"
+
+            val existingAssignedSwitch = findExistingAssignment(d)
+
+            val preservedAssignment =
+                if (assignedSwitch.isBlank())
+                    findExistingAssignment(d)
+                else
+                    assignedSwitch
 
             savedDevices.add(
                 DeviceEntry(
@@ -928,7 +992,8 @@ class SetupActivity : AppCompatActivity() {
                     fw = d.fw,
                     enabled = true,
                     deviceId = d.deviceId,
-                    localKey = d.localKey
+                    localKey = d.localKey,
+                    assignedSwitch = existingAssignedSwitch
                 )
             )
 
@@ -970,6 +1035,7 @@ class SetupActivity : AppCompatActivity() {
             o.put("enabled", d.enabled)
             o.put("device_id", d.deviceId)
             o.put("local_key", d.localKey)
+            o.put("assignedSwitch",d.assignedSwitch)
 
             arr.put(o)
         }

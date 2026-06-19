@@ -56,6 +56,7 @@ class MainActivity : AppCompatActivity() {
     private val alertPort = 9002
 
     @Volatile private var alertListenerRunning = false
+    @Volatile private var pollRunning = false
     private val REQ_POST_NOTIFICATIONS = 1001
 
     // Will be updated by discovery / prefs
@@ -76,6 +77,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var switchGeyser1: SwitchCompat
     private lateinit var switchGeyser2: SwitchCompat
     private lateinit var imgBatSoc: ImageView
+    private var geyser2Pending = false
+    private var geyser2Expected = false
+    private var geyser2PendingUntil = 0L
 
     var userChangingSwitch = true
 
@@ -320,6 +324,12 @@ class MainActivity : AppCompatActivity() {
         }.start()
     }
 
+    override fun onDestroy() {
+        pollRunning = false
+        alertListenerRunning = false
+        super.onDestroy()
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         println("DEBUG: onCreateOptionsMenu CALLED")
         menuInflater.inflate(R.menu.main_menu, menu)
@@ -509,144 +519,160 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        switchGeyser2.setOnClickListener {
-            val cmd = if (switchGeyser2.isChecked) "TUYA_ON" else "TUYA_OFF"
+        switchGeyser2.setOnCheckedChangeListener { buttonView, isChecked ->
 
-            Log.d("TUYA_SWITCH", "Sending: $cmd")
-            sendCommand(cmd)
+            if (!userChangingSwitch) return@setOnCheckedChangeListener
+            if (!buttonView.isPressed) return@setOnCheckedChangeListener
+
+            geyser2Pending = true
+            geyser2Expected = isChecked
+            geyser2PendingUntil = System.currentTimeMillis() + 20000
+
+            sendCommand(if (isChecked) "ON2" else "OFF2")
         }
     }
 
     private fun startPolling() {
+        if (pollRunning) return
+        pollRunning = true
+
         val handler = Handler(Looper.getMainLooper())
-        handler.postDelayed(object : Runnable {
+
+        handler.post(object : Runnable {
             override fun run() {
-                Thread { fetchStatus() }.start()
-                handler.postDelayed(this, 5000)
+                Thread {
+                    try {
+                        fetchStatus()
+                    } finally {
+                        if (pollRunning) {
+                            handler.postDelayed(this, 5000)
+                        }
+                    }
+                }.start()
             }
-        }, 1000)
+        })
     }
 
     @SuppressLint("SetTextI18n")
     private fun fetchStatus() {
         try {
-            val socket = Socket()
-            socket.connect(InetSocketAddress(masterIP, port), 2000)
+            Socket().use { socket ->
+                socket.soTimeout = 3000
+                socket.connect(InetSocketAddress(masterIP, port), 2000)
 
-            val os = socket.getOutputStream()
-            os.write("STATUS\n".toByteArray())
-            os.flush()
+                val os = socket.getOutputStream()
+                os.write("STATUS\n".toByteArray())
+                os.flush()
 
-            val input = socket.getInputStream()
-            val response = input.bufferedReader().readLine()?.trim() ?: ""
+                val response = socket
+                    .getInputStream()
+                    .bufferedReader()
+                    .readLine()
+                    ?.trim()
+                    ?: ""
 
-            if (response.isEmpty()) {
-                runOnUiThread {
-                    txtDebug.text = "⚠️ Empty STATUS response"
-                }
-                socket.close()
-                return
-            }
-
-            // Ignore log messages here
-            if (response.startsWith("LOG|")) {
-                val logLines = response.split("\n")
-                    .map { it.removePrefix("LOG|").trim() }
-                    .filter { it.matches(Regex("""\d{4}-\d{2}-\d{2}.*""")) }
-
-                appendNewLogData(logLines)
-
-                runOnUiThread {
-                    txtDebug.text = "📥 LOG update received: ${logLines.size} lines"
+                if (response.isEmpty()) {
+                    runOnUiThread {
+                        txtDebug.text = "⚠️ Empty STATUS response"
+                    }
+                    return
                 }
 
-                socket.close()
-                return
-            }
+                // Ignore log messages here
+                if (response.startsWith("LOG|")) {
+                    val logLines = response.split("\n")
+                        .map { it.removePrefix("LOG|").trim() }
+                        .filter { it.matches(Regex("""\d{4}-\d{2}-\d{2}.*""")) }
 
-            // Ignore PV log messages here
-            if (response.startsWith("PV_LOG|")) {
-                runOnUiThread {
-                    txtDebug.text = "PV_LOG received — ignored in MainActivity."
+                    appendNewLogData(logLines)
+
+                    runOnUiThread {
+                        txtDebug.text = "📥 LOG update received: ${logLines.size} lines"
+                    }
+                    return
                 }
-                socket.close()
-                return
-            }
 
-            // Expected format:
-            // STATUS|ON1|OFF2|BAT=2955,SOC=97,PV=1540,...
-            val cleanResponse = if (response.startsWith("STATUS|")) {
-                val parts = response.split('|')
-                if (parts.size >= 4) {
-                    parts.drop(3).joinToString("|")
-                } else {
-                    ""
+                // Ignore PV log messages here
+                if (response.startsWith("PV_LOG|")) {
+                    runOnUiThread {
+                        txtDebug.text = "PV_LOG received — ignored in MainActivity."
+                    }
+                    return
                 }
-            } else {
-                response
-            }
 
-            val map = cleanResponse.split(",")
-                .mapNotNull { item ->
-                    val parts = item.split("=", limit = 2)
-                    if (parts.size == 2) {
-                        parts[0].trim().uppercase() to parts[1].trim()
+                // Expected format:
+                // STATUS|ON1|OFF2|BAT=2955,SOC=97,PV=1540,...
+                val cleanResponse = if (response.startsWith("STATUS|")) {
+                    val parts = response.split('|')
+                    if (parts.size >= 4) {
+                        parts.drop(3).joinToString("|")
                     } else {
-                        null
+                        ""
                     }
-                }
-                .toMap()
-
-            runOnUiThread {
-                txtDebug.text = "📥 STATUS: $response"
-
-                txtBATP.text = " ${map["BAT"] ?: "--"}W"
-                txtSOC.text = " ${map["SOC"] ?: "--"}%"
-                txtPV.text = " ${map["PV"] ?: "--"} W"
-                txtGrid.text = " ${map["GRID"] ?: "--"} W"
-                txtUPS.text = " UPS:${map["UPS"] ?: "--"} W"
-                txtLoad.text = " Load:${map["LOAD"] ?: "--"} W"
-                txtTemp1.text = "1: ${map["TEMP1"] ?: "--"}°C"
-                txtTemp2.text = "2: ${map["TEMP2"] ?: "--"}°C"
-
-                val soc = map["SOC"]?.toFloatOrNull() ?: -100f
-                val batLevel = when {
-                    soc >= 100f -> 5
-                    soc >= 95f -> 4
-                    soc >= 75f -> 3
-                    soc >= 50f -> 2
-                    soc >= 25f -> 1
-                    soc >= 0f -> 0
-                    else -> 0
+                } else {
+                    response
                 }
 
-                val resId = when (batLevel) {
-                    0 -> R.drawable.bat_00
-                    1 -> R.drawable.bat_01
-                    2 -> R.drawable.bat_02
-                    3 -> R.drawable.bat_03
-                    4 -> R.drawable.bat_04
-                    5 -> R.drawable.bat_05
-                    else -> R.drawable.bat_00
-                }
-
-                imgBatSoc.setImageResource(resId)
-
-                updateSwitchStates(response)
-
-                map["RSSI"]?.toIntOrNull()?.let { rssi ->
-                    val wifiImage = when {
-                        rssi > -60 -> R.drawable.wifi_3
-                        rssi > -70 -> R.drawable.wifi_2
-                        rssi > -80 -> R.drawable.wifi_1
-                        rssi > -90 -> R.drawable.wifi_0
-                        else -> R.drawable.wifi_0
+                val map = cleanResponse.split(",")
+                    .mapNotNull { item ->
+                        val parts = item.split("=", limit = 2)
+                        if (parts.size == 2) {
+                            parts[0].trim().uppercase() to parts[1].trim()
+                        } else {
+                            null
+                        }
                     }
-                    findViewById<ImageView>(R.id.imageViewWifi).setImageResource(wifiImage)
+                    .toMap()
+
+                runOnUiThread {
+                    txtDebug.text = "📥 STATUS: $response"
+
+                    txtBATP.text = " ${map["BAT"] ?: "--"}W"
+                    txtSOC.text = " ${map["SOC"] ?: "--"}%"
+                    txtPV.text = " ${map["PV"] ?: "--"} W"
+                    txtGrid.text = " ${map["GRID"] ?: "--"} W"
+                    txtUPS.text = " UPS:${map["UPS"] ?: "--"} W"
+                    txtLoad.text = " Load:${map["LOAD"] ?: "--"} W"
+                    txtTemp1.text = "1: ${map["TEMP1"] ?: "--"}°C"
+                    txtTemp2.text = "2: ${map["TEMP2"] ?: "--"}°C"
+
+                    val soc = map["SOC"]?.toFloatOrNull() ?: -100f
+                    val batLevel = when {
+                        soc >= 100f -> 5
+                        soc >= 95f -> 4
+                        soc >= 75f -> 3
+                        soc >= 50f -> 2
+                        soc >= 25f -> 1
+                        soc >= 0f -> 0
+                        else -> 0
+                    }
+
+                    val resId = when (batLevel) {
+                        0 -> R.drawable.bat_00
+                        1 -> R.drawable.bat_01
+                        2 -> R.drawable.bat_02
+                        3 -> R.drawable.bat_03
+                        4 -> R.drawable.bat_04
+                        5 -> R.drawable.bat_05
+                        else -> R.drawable.bat_00
+                    }
+
+                    imgBatSoc.setImageResource(resId)
+
+                    updateSwitchStates(response)
+
+                    map["RSSI"]?.toIntOrNull()?.let { rssi ->
+                        val wifiImage = when {
+                            rssi > -60 -> R.drawable.wifi_3
+                            rssi > -70 -> R.drawable.wifi_2
+                            rssi > -80 -> R.drawable.wifi_1
+                            rssi > -90 -> R.drawable.wifi_0
+                            else -> R.drawable.wifi_0
+                        }
+                        findViewById<ImageView>(R.id.imageViewWifi).setImageResource(wifiImage)
+                    }
                 }
             }
-
-            socket.close()
 
         } catch (e: Exception) {
             runOnUiThread {
@@ -692,6 +718,7 @@ class MainActivity : AppCompatActivity() {
         //Thread {
             try {
                 val socket = Socket()
+                socket.soTimeout = 10000
                 socket.connect(InetSocketAddress(masterIP, port), 3000)
 
                 val writer = PrintWriter(socket.getOutputStream(), true)
@@ -752,14 +779,14 @@ class MainActivity : AppCompatActivity() {
 
                 Log.d("TCP_SEND", "Sending command: $cmd to $masterIP:$port")
 
-                val socket = Socket()
-                socket.connect(InetSocketAddress(masterIP, port), 2000)
+                Socket().use { socket ->
+                    socket.soTimeout = 3000
+                    socket.connect(InetSocketAddress(masterIP, port), 2000)
 
-                val os: OutputStream = socket.getOutputStream()
-                os.write(cmd.toByteArray())
-                os.flush()
-
-                socket.close()
+                    val os: OutputStream = socket.getOutputStream()
+                    os.write(cmd.toByteArray())
+                    os.flush()
+                }
 
                 runOnUiThread {
                     txtDebug.text = "📤 Sent: ${cmd.trim()} → $masterIP"
@@ -775,22 +802,65 @@ class MainActivity : AppCompatActivity() {
         }.start()
     }
 
-    private fun updateSwitchStates(status: String) {
+    private fun updateSwitchStates(
+        status: String
+    )
+    {
+        val parts =
+            status
+                .trim()
+                .uppercase()
+                .split('|')
 
-        val parts = status.trim().uppercase().split('|')
+        val geyser1On =
+            parts.contains("ON1")
 
-        val geyser1On = parts.contains("ON1")
-        val geyser2On = parts.contains("ON2")
+        val geyser2On =
+            parts.contains("ON2")
 
-        Log.d("SWITCH", "PARTS=$parts")
-        Log.d("SWITCH", "GEYSER1=$geyser1On, GEYSER2=$geyser2On")
+        val now =
+            System.currentTimeMillis()
 
-        userChangingSwitch = false
+        userChangingSwitch =
+            false
 
-        switchGeyser1.isChecked = geyser1On
-        switchGeyser2.isChecked = geyser2On
+        switchGeyser1.isChecked =
+            geyser1On
 
-        userChangingSwitch = true
+        if (
+            geyser2Pending &&
+            now <
+            geyser2PendingUntil
+        ) {
+
+            if (
+                geyser2On ==
+                geyser2Expected
+            ) {
+
+                geyser2Pending =
+                    false
+
+                switchGeyser2.isChecked =
+                    geyser2On
+
+            } else {
+
+                switchGeyser2.isChecked =
+                    geyser2Expected
+            }
+
+        } else {
+
+            geyser2Pending =
+                false
+
+            switchGeyser2.isChecked =
+                geyser2On
+        }
+
+        userChangingSwitch =
+            true
     }
 
     // Convenience to safely post to the debug TextView from background threads
